@@ -1,0 +1,19 @@
+# Node modules
+**/node_modules/
+**/dist/
+**/build/
+
+# Environment files
+.env
+.env.local
+
+codecircle-frontend/.env
+codecircle-backend/.env
+
+
+# Logs
+*.log
+
+# OS / Editor junk
+.DS_Store
+.vscode/
