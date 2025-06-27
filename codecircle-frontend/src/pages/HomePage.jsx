@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 const leetcodeApiURL = import.meta.env.VITE_LEETCODE_API_URL || "http://localhost:3000";
-const backendURL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+const backendURL = import.meta.env.VITE_BACKEND_URL ;
 
 function HomePage({ darkMode }) {
   const [username, setUsername] = useState('');
