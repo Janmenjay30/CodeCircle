@@ -17,6 +17,10 @@ mongoose.connect(process.env.MONGO_URI, {
 
 // Routes
 const userRoutes = require("./routes/userRoutes");
+app.get("/", (req, res) => {
+  res.send("Peer-Rank backend is live 🚀");
+});
+
 app.use("/api/users", userRoutes);
 
 const PORT = process.env.PORT || 5000;
