@@ -1,5 +1,5 @@
 import  { useState, useEffect } from 'react';
-import Leaderboard from './LeaderBoard';
+import Leaderboard from './Leaderboard';
 import React from 'react';
 
 const backendURL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
