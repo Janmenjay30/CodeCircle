@@ -1,0 +1,32 @@
+.react-calendar-heatmap .heatmap-empty {
+  fill: #ebedf0;
+}
+.react-calendar-heatmap .heatmap-1 {
+  fill: #c6e48b;
+}
+.react-calendar-heatmap .heatmap-2 {
+  fill: #7bc96f;
+}
+.react-calendar-heatmap .heatmap-3 {
+  fill: #239a3b;
+}
+.react-calendar-heatmap .heatmap-4 {
+  fill: #196127;
+}
+
+/* Dark mode support */
+.dark .react-calendar-heatmap .heatmap-empty {
+  fill: #2c2c2c;
+}
+.dark .react-calendar-heatmap .heatmap-1 {
+  fill: #365314;
+}
+.dark .react-calendar-heatmap .heatmap-2 {
+  fill: #4d7c0f;
+}
+.dark .react-calendar-heatmap .heatmap-3 {
+  fill: #65a30d;
+}
+.dark .react-calendar-heatmap .heatmap-4 {
+  fill: #84cc16;
+}
