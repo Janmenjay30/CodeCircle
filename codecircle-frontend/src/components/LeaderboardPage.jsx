@@ -1,4 +1,4 @@
-import  { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Leaderboard from './Leaderboard';
 import React from 'react';
 
@@ -8,22 +8,29 @@ function LeaderboardPage() {
   const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const res = await fetch(`${backendURL}/api/users`);
-        if (!res.ok) throw new Error('Failed to fetch');
-        const data = await res.json();
-        setUsers(data);
-        console.log("Data is ",data)
-      } catch (error) {
-        console.error("Error loading leaderboard:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchUsers = async () => {
+    try {
+      const res = await fetch(`${backendURL}/api/users`);
+      if (!res.ok) throw new Error('Failed to fetch');
+      const data = await res.json();
+      setUsers(data);
+      // console.log("Data is", data);
+    } catch (error) {
+      console.error("Error loading leaderboard:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    fetchUsers();
+  useEffect(() => {
+    fetchUsers(); // fetch immediately on mount
+
+    const interval = setInterval(() => {
+      console.log("Refreshing users from backend...");
+      fetchUsers(); // fetch every hour
+    }, 60 * 60 * 1000); // 1 hour = 3600000 ms
+
+    return () => clearInterval(interval); // cleanup on unmount
   }, []);
 
   return (
