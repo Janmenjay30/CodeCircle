@@ -3,10 +3,15 @@ import React, { useEffect, useState } from 'react';
 import AsyncSelect from 'react-select/async';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell,
+  LineChart, Line,
 } from 'recharts';
 import CalendarHeatmap from 'react-calendar-heatmap';
 import 'react-calendar-heatmap/dist/styles.css';
 import '../pages/heatmap-theme.css';
+import dayjs from 'dayjs';
+
+import getWeekdaySubmissionHistogram from '../utills/getWeekDaySubmissionHistogram';
+import getCumulativeChartData from '../utills/getCumulativeChartData';
 
 const backendURL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
@@ -14,6 +19,7 @@ const AnalyticsPage = () => {
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [userData, setUserData] = useState([]);
   const [darkMode, setDarkMode] = useState(document.documentElement.classList.contains('dark'));
+ 
 
   useEffect(() => {
     fetchUserData();
@@ -44,10 +50,8 @@ const AnalyticsPage = () => {
     }
   };
 
-  const COLORS = ['#1E88E5', '#43A047', '#FB8C00'];
   const difficultyColors = ['#66bb6a', '#ffa726', '#ef5350'];
 
-  // Bar Chart Data
   const barChartData = userData.map(user => ({
     username: user.username,
     "7d": Object.entries(user.submissionCalendar || {}).reduce((acc, [ts, count]) => {
@@ -61,6 +65,47 @@ const AnalyticsPage = () => {
       return acc;
     }, 0),
   }));
+
+  const calculateStreaks = (submissionCalendar) => {
+    const submissionDays = new Set(
+      Object.keys(submissionCalendar || {}).map(ts =>
+        new Date(Number(ts) * 1000).toISOString().split("T")[0]
+      )
+    );
+
+    const today = new Date();
+    let currentStreak = 0, longestStreak = 0, tempStreak = 0;
+    let totalInactiveDays = 0, inactiveDays = null;
+    let foundLastSubmission = false;
+
+    for (let i = 0; i < 365; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
+      const dateStr = date.toISOString().split("T")[0];
+
+      if (submissionDays.has(dateStr)) {
+        if (!foundLastSubmission) {
+          inactiveDays = i;
+          foundLastSubmission = true;
+        }
+        tempStreak += 1;
+        if (i === 0) currentStreak = tempStreak;
+      } else {
+        totalInactiveDays += 1;
+        if (tempStreak > longestStreak) longestStreak = tempStreak;
+        tempStreak = 0;
+      }
+    }
+
+    longestStreak = Math.max(longestStreak, tempStreak);
+
+    return {
+      currentStreak,
+      longestStreak,
+      inactiveDays: inactiveDays ?? 365,
+      totalInactiveDays
+    };
+  };
 
   return (
     <div className="min-h-screen bg-[#F2F2F2] dark:bg-black text-black dark:text-white py-20 px-4 sm:px-8">
@@ -149,34 +194,120 @@ const AnalyticsPage = () => {
             })}
           </div>
 
-          {/* Heatmap Calendar */}
-          <div className="grid md:grid-cols-2 gap-10 mt-10">
-            {userData.map((user, idx) => (
-              <div key={user.username} className="bg-white dark:bg-[#1a1a1a] rounded-xl shadow-md p-6">
-                <h3 className="text-lg font-semibold mb-4">📅 {user.username}'s Submission Calendar</h3>
-                <CalendarHeatmap
-                  startDate={new Date(new Date().setFullYear(new Date().getFullYear() - 1))}
-                  endDate={new Date()}
-                  values={Object.entries(user.submissionCalendar || {}).map(([ts, count]) => ({
-                    date: new Date(Number(ts) * 1000),
-                    count: Number(count),
-                  }))}
-                  classForValue={(value) => {
-                    if (!value || value.count === 0) return 'heatmap-empty';
-                    if (value.count < 2) return 'heatmap-1';
-                    if (value.count < 5) return 'heatmap-2';
-                    if (value.count < 10) return 'heatmap-3';
-                    return 'heatmap-4';
-                  }}
-                  tooltipDataAttrs={(value) => ({
-                    'data-tip': value && value.date
-                      ? `${value.date.toDateString()}: ${value.count} submissions`
-                      : 'No submissions',
+
+          {/* Submission Calendar */}
+            <div className="grid md:grid-cols-2 gap-10 mt-10">
+                  {userData.map((user) => {
+                    const startDate = new Date(new Date().setFullYear(new Date().getFullYear() - 1));
+
+                    return (
+                      <div
+                        key={user.username}
+                        className="bg-white dark:bg-[#1a1a1a] rounded-xl shadow-md p-6"
+                      >
+                        <h3 className="text-lg font-semibold mb-4">
+                          📅 {user.username}'s Submission Calendar
+                        </h3>
+                        <CalendarHeatmap
+                          startDate={startDate}
+                          endDate={new Date()}
+                          values={Object.entries(user.submissionCalendar || {}).map(
+                            ([ts, count]) => ({
+                              date: new Date(Number(ts) * 1000),
+                              count: Number(count),
+                            })
+                          )}
+                          classForValue={(value) => {
+                            if (!value || value.count === 0) return 'heatmap-empty';
+                            if (value.count < 2) return 'heatmap-1';
+                            if (value.count < 5) return 'heatmap-2';
+                            if (value.count < 10) return 'heatmap-3';
+                            return 'heatmap-4';
+                          }}
+                          tooltipDataAttrs={(value) => ({
+                            'data-tip':
+                              value && value.date
+                                ? `${value.date.toDateString()}: ${value.count} submissions`
+                                : 'No submissions',
+                          })}
+                          showWeekdayLabels
+                        />
+                      </div>
+                    );
                   })}
-                  showWeekdayLabels
-                />
-              </div>
-            ))}
+                </div>
+
+
+
+
+
+          {/* Streak Panel */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
+            {userData.map((user) => {
+              const { currentStreak, longestStreak, inactiveDays, totalInactiveDays } = calculateStreaks(user.submissionCalendar);
+              return (
+                <div key={user.username} className="bg-white dark:bg-[#1a1a1a] rounded-xl shadow-md p-6">
+                  <h3 className="text-lg font-semibold mb-4">🔥 {user.username}'s Streaks</h3>
+                  <ul className="space-y-2 text-base text-black dark:text-white">
+                    <li><strong>Current Streak:</strong> {currentStreak} day{currentStreak !== 1 && 's'}</li>
+                    <li><strong>Longest Streak:</strong> {longestStreak} day{longestStreak !== 1 && 's'}</li>
+                    <li><strong>Inactive For:</strong> {inactiveDays === 0 ? 'Active today 🎉' : `${inactiveDays} day${inactiveDays !== 1 ? 's' : ''}`}</li>
+                    <li><strong>Total Inactive Days (last 365 days):</strong> {totalInactiveDays}</li>
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Weekday Submission Chart */}
+          <div className="mt-16">
+            <h2 className="text-2xl font-bold text-center mb-6">📆 Submissions by Weekday</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {userData.map((user) => {
+                const data = getWeekdaySubmissionHistogram(user.submissionCalendar);
+                return (
+                  <div key={user.username} className="bg-white dark:bg-[#1a1a1a] p-6 rounded-xl shadow">
+                    <h3 className="text-lg font-semibold mb-4 text-center">{user.username}</h3>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <BarChart data={data}>
+                        <XAxis dataKey="day" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="count" fill="#1E88E5" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Cumulative Submissions */}
+          <div className="mt-16">
+            <h2 className="text-2xl font-bold text-center mb-6">📈 Cumulative Submissions</h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart
+                data={getCumulativeChartData(userData)}
+                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" tickFormatter={(date) => dayjs(date).format("MMM YY")} />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                {userData.map((user, index) => (
+                  <Line
+                    key={user.username}
+                    type="monotone"
+                    dataKey={user.username}
+                    stroke={["#1E88E5", "#E91E63", "#43A047"][index % 3]}
+                    strokeWidth={2}
+                    dot={false}
+                    isAnimationActive={false}
+                  />
+                ))}
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         </div>
       )}
@@ -185,4 +316,3 @@ const AnalyticsPage = () => {
 };
 
 export default AnalyticsPage;
-    
