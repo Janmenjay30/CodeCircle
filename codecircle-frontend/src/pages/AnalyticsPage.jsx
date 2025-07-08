@@ -13,7 +13,7 @@ import dayjs from 'dayjs';
 import getWeekdaySubmissionHistogram from '../utills/getWeekDaySubmissionHistogram';
 import getCumulativeChartData from '../utills/getCumulativeChartData';
 
-const backendURL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+const backendURL = import.meta.env.VITE_BACKEND_URL ;
 
 const AnalyticsPage = () => {
   const [selectedUsers, setSelectedUsers] = useState([]);

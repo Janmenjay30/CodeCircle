@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import Leaderboard from './Leaderboard';
 import React from 'react';
 
-const backendURL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+const backendURL = import.meta.env.VITE_BACKEND_URL ;
 
 function LeaderboardPage() {
   const [users, setUsers] = useState([]);
@@ -14,7 +14,7 @@ function LeaderboardPage() {
       if (!res.ok) throw new Error('Failed to fetch');
       const data = await res.json();
       setUsers(data);
-      // console.log("Data is", data);
+      console.log("Data is", data);
     } catch (error) {
       console.error("Error loading leaderboard:", error);
     } finally {

@@ -2,7 +2,7 @@ const cron = require('node-cron');
 const axios = require('axios');
 const User = require('../models/User');
 
-const leetcodeAPI = process.env.VITE_LEETCODE_API_URL || 'http://localhost:3000';
+const leetcodeAPI = process.env.VITE_LEETCODE_API_URL ;
 
 const updateUserData = async () => {
   try {
