@@ -6,7 +6,7 @@ require('./utils/cron');
 
 const updateUserData=require('./utils/cron')
 
-router.post('/run-cron', async (req, res) => {
+app.post('/run-cron', async (req, res) => {
   if (req.headers['x-cron-secret'] !== process.env.CRON_SECRET) {
     return res.status(403).json({ error: 'Forbidden' });
   }
