@@ -30,10 +30,10 @@ const updateUserData = async () => {
 };
 
 // Run every hour
-cron.schedule('0 * * * *', () => {
-  console.log("🔁 Starting hourly update...");
-  updateUserData();
-});
+// cron.schedule('0 * * * *', () => {
+//   console.log("🔁 Starting hourly update...");
+//   updateUserData();
+// });
 
 // Run every minute for testing purposes
 // cron.schedule('* * * * *', updateUserData);
